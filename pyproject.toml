@@ -1,0 +1,18 @@
+[project]
+name = "transcrip"
+version = "0.1.0"
+description = "Transcrição jurídica com diarização e timestamps"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "whisperx>=3.1.1",
+  "torch>=2.1.0",
+  "torchaudio>=2.1.0",
+]
+
+[project.scripts]
+transcrip = "transcrip.cli:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
