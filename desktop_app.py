@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
+import importlib.util
 import json
 import os
+import shutil
 import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from typing import Iterable
-
-import torch
-import whisperx
 
 
 def format_timestamp(seconds: float) -> str:
@@ -38,6 +37,9 @@ def run_transcription(
     language: str | None,
     batch_size: int,
 ) -> dict:
+    import torch
+    import whisperx
+
     if not torch.cuda.is_available():
         raise RuntimeError("GPU CUDA não encontrada. Esta interface exige GPU.")
 
@@ -149,6 +151,30 @@ def main() -> None:
 
         threading.Thread(target=task, daemon=True).start()
 
+    def check_requirements() -> None:
+        missing = []
+        if importlib.util.find_spec("torch") is None:
+            missing.append("torch")
+        if importlib.util.find_spec("whisperx") is None:
+            missing.append("whisperx")
+
+        ffmpeg_path = shutil.which("ffmpeg")
+        details = []
+
+        if missing:
+            details.append(f"Dependências Python ausentes: {', '.join(missing)}.")
+        else:
+            import torch
+
+            details.append(f"Torch instalado: {torch.__version__}")
+            details.append(f"CUDA disponível: {torch.cuda.is_available()}")
+
+        details.append(
+            f"FFmpeg encontrado: {'sim' if ffmpeg_path else 'não'}"
+        )
+
+        messagebox.showinfo("Diagnóstico", "\n".join(details))
+
     container = ttk.Frame(root, padding=16)
     container.pack(fill=tk.BOTH, expand=True)
 
@@ -198,6 +224,9 @@ def main() -> None:
     action_frame = ttk.Frame(container)
     action_frame.pack(fill=tk.X, pady=12)
     ttk.Button(action_frame, text="Transcrever", command=run_job).pack(anchor=tk.W)
+    ttk.Button(action_frame, text="Diagnóstico", command=check_requirements).pack(
+        anchor=tk.W, pady=(8, 0)
+    )
 
     ttk.Label(container, textvariable=status_var).pack(anchor=tk.W, pady=(8, 0))
 
